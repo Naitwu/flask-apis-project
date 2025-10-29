@@ -6,6 +6,10 @@ from flask_migrate import Migrate
 from db import db
 from blocklist import BLOCKLIST
 import models
+from rq import Queue
+from dotenv import load_dotenv
+import os
+from redis import Redis
 
 from resources.item import blp as ItemBlueprint
 from resources.store import blp as StoreBlueprint
@@ -15,6 +19,11 @@ from resources.user import blp as UserBlueprint
 
 def create_app(db_url=None):
     app = Flask(__name__)
+    load_dotenv()
+
+    connection_url = os.getenv("REDIS_URL")
+    app.redis = Redis.from_url(connection_url)
+    app.queue = Queue("emails", connection=app.redis)
     app.config["API_TITLE"] = "Stores REST API"
     app.config["API_VERSION"] = "v1"
     app.config["OPENAPI_VERSION"] = "3.0.3"
